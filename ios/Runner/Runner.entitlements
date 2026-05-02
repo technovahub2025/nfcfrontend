@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- NFC Reader Session Entitlement (Equivalent to Android NFC permissions) -->
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>NDEF</string>
+		<string>ISO7816</string>
+		<string>FeliCa</string>
+		<string>MiFare</string>
+	</array>
+	
+	<!-- NFC Reader Session ISO7816 Select Identifiers -->
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>A0000000031010</string>
+		<string>A0000000041010</string>
+		<string>A000000003101001</string>
+		<string>A000000003101002</string>
+		<string>A000000003101003</string>
+		<string>A000000003101004</string>
+		<string>A000000003101005</string>
+		<string>A000000003101006</string>
+		<string>A000000003101007</string>
+		<string>A000000003101008</string>
+		<string>A000000003101009</string>
+		<string>A00000000310100A</string>
+		<string>A00000000310100B</string>
+		<string>A00000000310100C</string>
+		<string>A00000000310100D</string>
+		<string>A00000000310100E</string>
+		<string>A00000000310100F</string>
+		<!-- Additional NFC card types -->
+		<string>A0000001524010</string>
+		<string>A0000001544442</string>
+		<string>A000000333010101</string>
+		<string>A000000333010102</string>
+		<string>A000000333010103</string>
+		<string>A000000333010104</string>
+		<string>A000000333010105</string>
+		<string>A000000333010106</string>
+		<string>A000000333010107</string>
+		<string>A000000333010108</string>
+		<string>A000000333010109</string>
+		<string>A00000033301010A</string>
+		<string>A00000033301010B</string>
+		<string>A00000033301010C</string>
+		<string>A00000033301010D</string>
+		<string>A00000033301010E</string>
+		<string>A00000033301010F</string>
+	</array>
+	
+	<!-- Associated Domains (Equivalent to Android deep linking) -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>nfcprofilebackend.onrender.com</string>
+		<string>applinks:nfcprofilebackend.onrender.com</string>
+		<string>webcredentials:nfcprofilebackend.onrender.com</string>
+	</array>
+	
+	<!-- Keychain Sharing (Equivalent to Android shared preferences) -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.example.nfc</string>
+		<string>$(AppIdentifierPrefix)com.example.nfc.shared</string>
+		<string>$(AppIdentifierPrefix)com.example.nfc.secure</string>
+	</array>
+	
+	<!-- App Groups (Equivalent to Android shared storage) -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.example.nfc</string>
+		<string>group.com.example.nfc.shared</string>
+	</array>
+	
+	<!-- Background App Refresh (Equivalent to Android background services) -->
+	<key>com.apple.developer.background-processing</key>
+	<true/>
+	
+	<!-- Push Notifications (Equivalent to Android foreground services) -->
+	<key>aps-environment</key>
+	<string>development</string>
+	
+	<!-- CloudKit (Equivalent to Android cloud storage) -->
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.example.nfc</string>
+	</array>
+	
+	<!-- iCloud Key-Value Storage -->
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+		<string>KeyValueStore</string>
+	</array>
+	
+	<!-- In-App Purchase (for future premium features) -->
+	<key>com.apple.developer.in-app-payments</key>
+	<array>
+		<string>merchant.com.example.nfc</string>
+	</array>
+	
+	<!-- Network Extensions (for advanced networking) -->
+	<key>com.apple.developer.networking.network-extension</key>
+	<true/>
+	
+	<!-- Sign In with Apple (for authentication) -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	
+	<!-- Siri (for voice commands) -->
+	<key>com.apple.developer.siri</key>
+	<true/>
+	
+	<!-- HealthKit (for potential health-related features) -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	
+	<!-- HomeKit (for smart home integration) -->
+	<key>com.apple.developer.homekit</key>
+	<true/>
+	
+	<!-- Wallet (for digital card storage) -->
+	<key>com.apple.developer.pass-type-identifiers</key>
+	<array>
+		<string>pass.com.example.nfc.digitalcard</string>
+	</array>
+	
+	<!-- Maps (for enhanced mapping features) -->
+	<key>com.apple.developer.maps</key>
+	<true/>
+	
+	<!-- Media Playback (for audio/video features) -->
+	<key>com.apple.developer.media-playback</key>
+	<true/>
+</dict>
+</plist>
