@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Nfc</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>nfc</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	
+	<!-- NFC Permissions (Equivalent to Android NFC) -->
+	<key>NFCReaderUsageDescription</key>
+	<string>This app uses NFC to read and write digital business cards to NFC tags.</string>
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>NDEF</string>
+		<string>ISO7816</string>
+	</array>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>A0000000031010</string>
+		<string>A0000000041010</string>
+		<string>A000000003101001</string>
+		<string>A000000003101002</string>
+		<string>A000000003101003</string>
+		<string>A000000003101004</string>
+		<string>A000000003101005</string>
+		<string>A000000003101006</string>
+		<string>A000000003101007</string>
+		<string>A000000003101008</string>
+		<string>A000000003101009</string>
+		<string>A00000000310100A</string>
+		<string>A00000000310100B</string>
+		<string>A00000000310100C</string>
+		<string>A00000000310100D</string>
+		<string>A00000000310100E</string>
+		<string>A00000000310100F</string>
+	</array>
+	
+	<!-- Camera Permission (Equivalent to Android Camera) -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to scan QR codes and capture profile photos for digital business cards.</string>
+	
+	<!-- Contacts Permissions (Equivalent to Android READ_CONTACTS/WRITE_CONTACTS) -->
+	<key>NSContactsUsageDescription</key>
+	<string>This app needs access to contacts to save digital business cards and read contact information.</string>
+	
+	<!-- Photos/Storage Permissions (Equivalent to Android Storage permissions) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select profile images for digital business cards.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save profile images and business cards to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to read media images for profile pictures and business card images.</string>
+	
+	<!-- Location Permission (Equivalent to Android Location for Maps) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses location to show addresses on maps and provide navigation directions for business contacts.</string>
+	
+	<!-- Internet/Network Permissions (Equivalent to Android INTERNET) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>nfcprofilebackend.onrender.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>render.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>google.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>instagram.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>facebook.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>linkedin.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	
+	<!-- URL Scheme Support (Equivalent to Android queries for app detection) -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<!-- Email apps (equivalent to Android SENDTO mailto) -->
+		<string>mailto</string>
+		
+		<!-- Phone dialer (equivalent to Android DIAL tel) -->
+		<string>tel</string>
+		
+		<!-- Browser (equivalent to Android VIEW https) -->
+		<string>https</string>
+		<string>http</string>
+		
+		<!-- Social Media Apps (equivalent to Android social media queries) -->
+		<string>instagram</string>
+		<string>instagram-stories</string>
+		<string>fb</string>
+		<string>facebook</string>
+		<string>linkedin</string>
+		<string>linkedin-wms</string>
+		
+		<!-- Maps (equivalent to Android geo and Google Maps) -->
+		<string>maps</string>
+		<string>comgooglemaps</string>
+		<string>googlemaps</string>
+		<waze://</string>
+		
+		<!-- Communication apps -->
+		<string>whatsapp</string>
+		<string>telegram</string>
+		<string>twitter</string>
+		<string>sms</string>
+		
+		<!-- File sharing -->
+		<string>file</string>
+		<string>share</string>
+		
+		<!-- Contact apps -->
+		<string>addressbook</string>
+		<string>contacts</string>
+	</array>
+	
+	<!-- Background App Refresh (for NFC background processing) -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+		<string>background-fetch</string>
+		<string>background-nfc</string>
+	</array>
+	
+	<!-- Security and Authentication -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app may use Face ID to secure your digital business cards and profile information.</string>
+	
+	<!-- Microphone Permission (for future voice features) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may use the microphone for voice commands and audio features in digital business cards.</string>
+	
+	<!-- Motion and Fitness (for potential location-based features) -->
+	<key>NSMotionUsageDescription</key>
+	<string>This app may use motion data to improve location accuracy for business card addresses.</string>
+	
+	<!-- Bluetooth (for potential NFC accessory integration) -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app may use Bluetooth to connect to NFC accessories and external devices.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>This app may use Bluetooth to communicate with NFC-enabled peripherals.</string>
+	
+	<!-- Calendar (for saving business meetings) -->
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app may access your calendar to save business meetings from digital business cards.</string>
+	
+	<!-- Reminders (for saving follow-up tasks) -->
+	<key>NSRemindersUsageDescription</key>
+	<string>This app may access reminders to save follow-up tasks from business card contacts.</string>
+	
+	<!-- App Transport Security for local development -->
+	<key>NSAllowsArbitraryLoads</key>
+	<true/>
+	
+	<!-- Associated Domains (for deep linking) -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>nfcprofilebackend.onrender.com</string>
+		<string>applinks:nfcprofilebackend.onrender.com</string>
+	</array>
+	
+	<!-- Keychain Sharing (for secure data storage) -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.example.nfc</string>
+		<string>$(AppIdentifierPrefix)com.example.nfc.shared</string>
+	</array>
+	
+</dict>
+</plist>
