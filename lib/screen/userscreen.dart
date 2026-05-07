@@ -47,7 +47,7 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
   String? _qrData;
 
   // Base URLs for social media platforms
-  static const String googleBusinessBase = 'https://www.google.com/maps/search/?api=1&query=';
+  static const String googleBusinessBase = 'https://business.google.com/';
   static const String instagramBase = 'https://www.instagram.com/';
   static const String linkedinBase = 'https://www.linkedin.com/in/';
   static const String facebookBase = 'https://www.facebook.com/';
@@ -2522,6 +2522,7 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
           return Uri.parse('https://$trimmed');
         }
         return Uri.parse('https://www.$trimmed.com');
+      
       default:
         break;
     }

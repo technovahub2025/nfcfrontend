@@ -48,7 +48,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
   String? _qrData;
 
   // Base URLs for social media platforms
-  static const String googleBusinessBase = 'https://www.google.com/maps/search/?api=1&query=';
+  static const String googleBusinessBase = 'https://business.google.com/';
   static const String instagramBase = 'https://www.instagram.com/';
   static const String linkedinBase = 'https://www.linkedin.com/in/';
   static const String facebookBase = 'https://www.facebook.com/';
@@ -79,6 +79,13 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
       return trimmed;
     }
     return 'www.$trimmed.com';
+
+    if(trimmed.startsWith('in')) {
+
+      return  trimmed;
+    }
+
+    return 'www.$trimmed.in';
   }
 
   Map<String, dynamic> _createProfileData() {
