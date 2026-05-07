@@ -42,6 +42,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
   final _instagramController = TextEditingController();
   final _linkedinController = TextEditingController();
   final _facebookController = TextEditingController();
+  final _website=TextEditingController();
 
   // QR Code data
   String? _qrData;
@@ -51,7 +52,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
   static const String instagramBase = 'https://www.instagram.com/';
   static const String linkedinBase = 'https://www.linkedin.com/in/';
   static const String facebookBase = 'https://www.facebook.com/';
-
+  
   String _generateGoogleBusinessURL(String businessName) {
     return businessName.isEmpty ? '' : '$googleBusinessBase${Uri.encodeComponent(businessName)}';
   }
@@ -68,6 +69,18 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
     return username.isEmpty ? '' : '$facebookBase$username';
   }
 
+  String _generateWebsiteURL(String websiteName) {
+    final trimmed = websiteName.trim();
+    if (trimmed.isEmpty) return '';
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('www.')) {
+      return trimmed;
+    }
+    return 'www.$trimmed.com';
+  }
+
   Map<String, dynamic> _createProfileData() {
     return {
       'name': _nameController.text.trim(),
@@ -79,6 +92,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
       'instagram': _instagramController.text.trim(),
       'linkedin': _linkedinController.text.trim(),
       'facebook': _facebookController.text.trim(),
+      'website': _generateWebsiteURL(_website.text),
       'type': 'enhanced_nfc_profile',
       'created_at': DateTime.now().toIso8601String(),
     };
@@ -267,7 +281,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
           },
         ),
         title: const Text(
-          'Digital Wall NFC',
+          'Techno Biz Connect',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -314,8 +328,35 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
           ),
         ),
       ),
+       bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: InkWell(
+            onTap: () async {
+              final Uri uri = Uri.parse('https://technovahub.in/');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '@ powered by Technovahub',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
+
 
   Widget _buildCurrentContent() {
     if (currentMode == 'scan') {
@@ -520,8 +561,16 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
 
           TextFormField(
             controller: _facebookController,
-            textInputAction: TextInputAction.done,
+            textInputAction: TextInputAction.next,
             decoration: _buildInputDecoration('Facebook Username', Icons.facebook),
+            enabled: !isScanning && !isProcessing,
+          ),
+          const SizedBox(height: 12),
+
+          TextFormField(
+            controller: _website,
+            textInputAction: TextInputAction.done,
+            decoration: _buildInputDecoration('Website Name', Icons.language),
             enabled: !isScanning && !isProcessing,
           ),
 
@@ -906,6 +955,13 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
                             url: userData['twitter'],
                             color: Colors.black87,
                           ),
+                        if (userData['website'] != null && userData['website'].toString().isNotEmpty)
+                          _buildDigitalWallSocialChip(
+                            icon: Icons.language,
+                            label: 'Website',
+                            url: userData['website'],
+                            color: Colors.teal,
+                          ),
                        
                       ],
                     ),
@@ -1074,7 +1130,8 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
            (data['instagram'] != null && data['instagram'].toString().isNotEmpty) ||
            (data['linkedin'] != null && data['linkedin'].toString().isNotEmpty) ||
            (data['facebook'] != null && data['facebook'].toString().isNotEmpty) ||
-           (data['twitter'] != null && data['twitter'].toString().isNotEmpty);
+           (data['twitter'] != null && data['twitter'].toString().isNotEmpty) ||
+           (data['website'] != null && data['website'].toString().isNotEmpty);
   }
 
   void _launchURL(String url, {String? platform}) async {
@@ -1103,6 +1160,11 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
         return Uri.parse('https://www.google.com/search/?api=1&query=${Uri.encodeComponent(trimmed)}');
       case 'twitter':
         return Uri.parse('https://x.com/${trimmed.replaceAll('@', '')}');
+      case 'website':
+        if (trimmed.startsWith('www.')) {
+          return Uri.parse('https://$trimmed');
+        }
+        return Uri.parse('https://www.$trimmed.com');
       default:
         break;
     }
@@ -1124,6 +1186,8 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
         return 'googleBusiness';
       case 'Twitter/X':
         return 'twitter';
+      case 'Website':
+        return 'website';
       default:
         return '';
     }
@@ -1240,46 +1304,6 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
     return '';
   }
 
-  String _decodeNdefMessage(NdefMessage message) {
-    final parts = <String>[];
-    
-    // Safe check for records
-    final records = message.records ?? [];
-    if (records.isEmpty) {
-      return '(Empty NFC tag)';
-    }
-    
-    for (final record in records) {
-      // Safe type decoding
-      String type = '';
-      try {
-        if (record.type != null) {
-          type = ascii.decode(record.type!, allowInvalid: true);
-        }
-      } catch (_) {
-        type = '';
-      }
-      
-      // Handle text records
-      if (type == 'T') {
-        if (record.payload != null && record.payload!.isNotEmpty) {
-          parts.add(_decodeTextRecordPayload(record.payload!));
-        }
-        continue;
-      }
-      
-      // Handle other records
-      if (record.payload != null && record.payload!.isNotEmpty) {
-        try {
-          parts.add(utf8.decode(record.payload!, allowMalformed: true));
-        } catch (_) {
-          // Skip malformed payload
-        }
-      }
-    }
-    
-    return parts.where((p) => p.trim().isNotEmpty).join('\n');
-  }
 
   Map<String, dynamic> _parseScannedUserData(String raw) {
     final text = raw.trim();
@@ -1377,230 +1401,6 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
     }
   }
 
-  Future<void> _startNFCReadSession() async {
-    if (!isNFCAvailable) return;
-
-    setState(() {
-      isScanning = true;
-      isProcessing = false;
-      errorMessage = null;
-      readData = null;
-      scannedData = null;
-    });
-
-    try {
-      try {
-        await NfcManager.instance.stopSession();
-      } catch (_) {}
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Now tap the NFC card to read the data')),
-        );
-      }
-
-      await NfcManager.instance.startSession(
-        onDiscovered: (NfcTag tag) async {
-          if (_isHandlingDiscoveredTag) return;
-          _isHandlingDiscoveredTag = true;
-          try {
-            if (!mounted) return;
-            
-            setState(() {
-              isProcessing = true;
-            });
-
-            final ndef = Ndef.from(tag);
-            if (ndef == null) {
-              try {
-                await NfcManager.instance.stopSession(errorMessage: 'This NFC tag is not NDEF compatible.');
-                if (!mounted) return;
-                setState(() {
-                  isScanning = false;
-                  isProcessing = false;
-                  errorMessage = 'This NFC tag is not NDEF compatible.';
-                });
-                _showErrorToast('NFC card is not compatible', context);
-                
-                // Show incompatible tag error in alert
-                if (mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('NFC Tag Error'),
-                      content: Text('This NFC tag is not NDEF compatible. Please use a different NFC card.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return;
-              } catch (e) {
-                print('Error stopping NFC session: $e');
-                if (!mounted) return;
-                setState(() {
-                  isScanning = false;
-                  isProcessing = false;
-                  errorMessage = 'NFC session error: $e';
-                });
-                
-                // Show session error in alert
-                if (mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('NFC Session Error'),
-                      content: Text('Failed to process NFC tag: $e'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return;
-              }
-            }
-
-            try {
-              NdefMessage? message = ndef.cachedMessage;
-              if (message == null) {
-                message = await ndef.read();
-              }
-              
-              if (!mounted) return;
-              
-              final decoded = _decodeNdefMessage(message);
-              if (kDebugMode) {
-                print('Decoded NFC data: $decoded');
-              }
-
-              await NfcManager.instance.stopSession(alertMessage: 'Read from NFC tag');
-              if (!mounted) return;
-              
-              setState(() {
-                readData = decoded.isEmpty ? '(Empty tag)' : decoded;
-                isScanning = false;
-                isProcessing = false;
-              });
-              if (mounted) {
-                _showReadResult();
-              }
-            } catch (e) {
-              print('Error reading NFC tag: $e');
-              try {
-                await NfcManager.instance.stopSession(errorMessage: 'Read failed');
-              } catch (stopError) {
-                print('Error stopping NFC session: $stopError');
-              }
-              
-              if (!mounted) return;
-              setState(() {
-                isScanning = false;
-                isProcessing = false;
-                errorMessage = 'Failed to read NFC data';
-              });
-            }
-          } catch (e) {
-            print('Critical NFC error: $e');
-            try {
-              await NfcManager.instance.stopSession();
-            } catch (stopError) {
-              print('Error stopping NFC session in catch: $stopError');
-            }
-            
-            if (!mounted) return;
-            setState(() {
-              isScanning = false;
-              isProcessing = false;
-              errorMessage = 'NFC scanning error: $e';
-            });
-            
-            // Show error in alert
-            if (mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('NFC Error'),
-                  content: Text('Failed to scan NFC card: $e'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            }
-          } finally {
-            _isHandlingDiscoveredTag = false;
-          }
-        },
-        onError: (error) async {
-          print('NFC session error: $error');
-          try {
-            await NfcManager.instance.stopSession();
-          } catch (e) {
-            print('Error stopping NFC session on error: $e');
-          }
-          
-          if (!mounted) return;
-          setState(() {
-            isScanning = false;
-            isProcessing = false;
-            errorMessage = 'NFC connection error: $error';
-          });
-          
-          // Show NFC connection error in alert
-          if (mounted) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('NFC Connection Error'),
-                content: Text('Failed to establish NFC connection: $error'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        isScanning = false;
-        isProcessing = false;
-        errorMessage = 'Failed to start NFC session: $e';
-      });
-      
-      // Show session start error in alert
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('NFC Session Error'),
-            content: Text('Failed to start NFC scanning: $e'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _startNFCWriteSession(String payload) async {
     if (!isNFCAvailable) return;
@@ -1923,6 +1723,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
         'instagram': _generateInstagramURL('testuser_official'),
         'linkedin': _generateLinkedInURL('test-user-profile'),
         'facebook': _generateFacebookURL('test.user.page'),
+        'website': _generateWebsiteURL('testsite'),
         
         'type': 'NFC',
         'created_at': DateTime.now().toIso8601String(),
@@ -2034,6 +1835,7 @@ class _EnhancedNFCScannerState extends State<adminEnhancedNFCScanner> {
     _instagramController.dispose();
     _linkedinController.dispose();
     _facebookController.dispose();
+    _website.dispose();
     super.dispose();
   }
 }
@@ -2217,6 +2019,13 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
                             color: Colors.black87,
                             url: userData['twitter'],
                           ),
+                        if (userData['website'] != null && userData['website'].toString().isNotEmpty)
+                          _buildSocialButton(
+                            icon: Icons.language,
+                            label: 'Website',
+                            color: Colors.teal,
+                            url: userData['website'],
+                          ),
                       
                       ],
                     ),
@@ -2313,7 +2122,8 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
            (data['instagram'] != null && data['instagram'].toString().isNotEmpty) ||
            (data['linkedin'] != null && data['linkedin'].toString().isNotEmpty) ||
            (data['facebook'] != null && data['facebook'].toString().isNotEmpty) ||
-           (data['twitter'] != null && data['twitter'].toString().isNotEmpty);
+           (data['twitter'] != null && data['twitter'].toString().isNotEmpty) ||
+           (data['website'] != null && data['website'].toString().isNotEmpty);
   }
 
   void _makePhoneCall(String? phoneNumber) async {
@@ -2369,6 +2179,11 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
         return Uri.parse('https://www.google.com/search/?api=1&query=${Uri.encodeComponent(trimmed)}');
       case 'twitter':
         return Uri.parse('https://x.com/${trimmed.replaceAll('@', '')}');
+      case 'website':
+        if (trimmed.startsWith('www.')) {
+          return Uri.parse('https://$trimmed');
+        }
+        return Uri.parse('https://www.$trimmed.com');
       default:
         break;
     }
@@ -2397,6 +2212,8 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
         return 'googleBusiness';
       case 'Twitter/X':
         return 'twitter';
+      case 'Website':
+        return 'website';
       default:
         return '';
     }
@@ -2416,6 +2233,7 @@ ${userData['instagram'] != null ? 'Instagram: ${userData['instagram']}\n' : ''}
 ${userData['linkedin'] != null ? 'LinkedIn: ${userData['linkedin']}\n' : ''}
 ${userData['facebook'] != null ? 'Facebook: ${userData['facebook']}\n' : ''}
 ${userData['twitter'] != null ? 'Twitter/X: ${userData['twitter']}\n' : ''}
+${userData['website'] != null ? 'Website: ${userData['website']}\n' : ''}
 
     '''.trim();
 

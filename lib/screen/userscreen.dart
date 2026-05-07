@@ -267,7 +267,7 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
           },
         ),
         title: const Text(
-          'Digital Wall NFC',
+          'Techno Biz Connect',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -315,8 +315,35 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
           ),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: InkWell(
+            onTap: () async {
+              final Uri uri = Uri.parse('https://technovahub.in/');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '@ powered by Technovahub',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
+
 
   Widget _buildCurrentContent() {
     if (currentMode == 'scan') {
@@ -950,6 +977,13 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
                             url: userData['twitter'],
                             color: Colors.black87,
                           ),
+                        if (userData['website'] != null && userData['website'].toString().isNotEmpty)
+                          _buildDigitalWallSocialChip(
+                            icon: Icons.language,
+                            label: 'Website',
+                            url: userData['website'],
+                            color: Colors.teal,
+                          ),
                        
                       ],
                     ),
@@ -1118,7 +1152,8 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
            (data['instagram'] != null && data['instagram'].toString().isNotEmpty) ||
            (data['linkedin'] != null && data['linkedin'].toString().isNotEmpty) ||
            (data['facebook'] != null && data['facebook'].toString().isNotEmpty) ||
-           (data['twitter'] != null && data['twitter'].toString().isNotEmpty);
+           (data['twitter'] != null && data['twitter'].toString().isNotEmpty) ||
+           (data['website'] != null && data['website'].toString().isNotEmpty);
   }
 
   void _launchURL(String url, {String? platform}) async {
@@ -1147,6 +1182,11 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
         return Uri.parse('https://www.google.com/search/?api=1&query=${Uri.encodeComponent(trimmed)}');
       case 'twitter':
         return Uri.parse('https://x.com/${trimmed.replaceAll('@', '')}');
+      case 'website':
+        if (trimmed.startsWith('www.')) {
+          return Uri.parse('https://$trimmed');
+        }
+        return Uri.parse('https://www.$trimmed.com');
       default:
         break;
     }
@@ -1168,6 +1208,8 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
         return 'googleBusiness';
       case 'Twitter/X':
         return 'twitter';
+      case 'Website':
+        return 'website';
       default:
         return '';
     }
@@ -2020,6 +2062,7 @@ class _EnhancedNFCScannerState extends State<userEnhancedNFCScanner> {
         'instagram': _generateInstagramURL('testuser_official'),
         'linkedin': _generateLinkedInURL('test-user-profile'),
         'facebook': _generateFacebookURL('test.user.page'),
+        'website': 'www.testsite.com',
         
         'type': 'NFC',
         'created_at': DateTime.now().toIso8601String(),
@@ -2314,6 +2357,13 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
                             color: Colors.black87,
                             url: userData['twitter'],
                           ),
+                        if (userData['website'] != null && userData['website'].toString().isNotEmpty)
+                          _buildSocialButton(
+                            icon: Icons.language,
+                            label: 'Website',
+                            color: Colors.teal,
+                            url: userData['website'],
+                          ),
                       
                       ],
                     ),
@@ -2410,7 +2460,8 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
            (data['instagram'] != null && data['instagram'].toString().isNotEmpty) ||
            (data['linkedin'] != null && data['linkedin'].toString().isNotEmpty) ||
            (data['facebook'] != null && data['facebook'].toString().isNotEmpty) ||
-           (data['twitter'] != null && data['twitter'].toString().isNotEmpty);
+           (data['twitter'] != null && data['twitter'].toString().isNotEmpty) ||
+           (data['website'] != null && data['website'].toString().isNotEmpty);
   }
 
   void _makePhoneCall(String? phoneNumber) async {
@@ -2466,6 +2517,11 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
         return Uri.parse('https://www.google.com/search/?api=1&query=${Uri.encodeComponent(trimmed)}');
       case 'twitter':
         return Uri.parse('https://x.com/${trimmed.replaceAll('@', '')}');
+      case 'website':
+        if (trimmed.startsWith('www.')) {
+          return Uri.parse('https://$trimmed');
+        }
+        return Uri.parse('https://www.$trimmed.com');
       default:
         break;
     }
@@ -2494,6 +2550,8 @@ class EnhancedNFCDataDisplayScreen extends StatelessWidget {
         return 'googleBusiness';
       case 'Twitter/X':
         return 'twitter';
+      case 'Website':
+        return 'website';
       default:
         return '';
     }
@@ -2513,6 +2571,7 @@ ${userData['instagram'] != null ? 'Instagram: ${userData['instagram']}\n' : ''}
 ${userData['linkedin'] != null ? 'LinkedIn: ${userData['linkedin']}\n' : ''}
 ${userData['facebook'] != null ? 'Facebook: ${userData['facebook']}\n' : ''}
 ${userData['twitter'] != null ? 'Twitter/X: ${userData['twitter']}\n' : ''}
+${userData['website'] != null ? 'Website: ${userData['website']}\n' : ''}
 
     '''.trim();
 
