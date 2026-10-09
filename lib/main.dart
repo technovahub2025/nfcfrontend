@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nfc/screen/dahboard.dart';
+import 'package:nfc/screen/profile_entry_screen.dart';
 import 'package:nfc/screen/enhanced_nfc_scanner.dart';
 import 'package:app_links/app_links.dart';
 
@@ -76,7 +76,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: TopContainerExample(),
+      home: const ProfileEntryScreen(),
     );
   }
 }

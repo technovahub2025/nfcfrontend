@@ -1,12 +1,37 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class NFCProfileService {
-  static const String baseUrl = 'https://nfcprofilebackend.onrender.com/api';
+  static const String baseUrl = 'https://www.technovahub.in/tbc_connect/api';
+
+  static String generateProfileHtmlUrl(String profileId) {
+    if (!RegExp(r'^[a-fA-F0-9]{24}$').hasMatch(profileId)) {
+      throw ArgumentError('Invalid profile ID');
+    }
+    return '$baseUrl/profile-page/$profileId';
+  }
+
+  // The backend returns HTML here, rather than a JSON profile.
+  static Future<String?> getProfileHtml(String profileId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(generateProfileHtmlUrl(profileId)),
+        headers: {'Accept': 'text/html', 'Cache-Control': 'no-cache'},
+      ).timeout(const Duration(seconds: 30));
+      if (response.statusCode == 200 &&
+          (response.headers['content-type'] ?? '').toLowerCase().contains('text/html') &&
+          response.body.trim().isNotEmpty) {
+        return response.body;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('Error getting HTML profile: $e');
+      return null;
+    }
+  }
 
   // Show request in alert
   static void showRequestAlert(BuildContext context, String method, Map<String, dynamic> requestBody) {
@@ -159,11 +184,9 @@ class NFCProfileService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'User-Agent': 'Flutter-NFC-App',
-            'Connection': 'keep-alive',
           },
           body: jsonEncode(requestBody),
-        );
+        ).timeout(const Duration(seconds: 30));
 
         print('DEBUG: Response status code: ${response.statusCode}');
         print('DEBUG: Response body: ${response.body}');
@@ -174,19 +197,19 @@ class NFCProfileService {
           showResponseAlert(context, 'create', response.statusCode, response.body);
         }
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final responseData = jsonDecode(response.body);
           print('DEBUG: Parsed response data: $responseData');
-          return responseData['data'];
+          return Map<String, dynamic>.from((responseData['data'] ?? responseData) as Map);
         } else {
           print('ERROR: Creating profile failed - Status: ${response.statusCode}');
           print('ERROR: Response body: ${response.body}');
           return null;
         }
-      } on SocketException {
-        print('ERROR: No internet connection or server not reachable');
-        if (context != null) {
-          showResponseAlert(context, 'create', 0, 'No internet connection or server not reachable');
+      } on http.ClientException catch (e) {
+        if (kDebugMode) debugPrint('Profile request failed: $e');
+        if (context != null && context.mounted) {
+          showResponseAlert(context, 'create', 0, 'Could not reach the profile server. On web, check the browser Console for network or CORS errors.');
         }
         return null;
       }
@@ -197,29 +220,30 @@ class NFCProfileService {
   }
 
   // Get profile by ID
-  static Future<Map<String, dynamic>?> getProfile(String profileId,BuildContext context) async {
+  static Future<Map<String, dynamic>?> getProfile(String profileId, [BuildContext? context]) async {
     try {
       final url = '$baseUrl/getprofile/$profileId';
       
       // Show request alert
-      showRequestAlert(context, 'getprofile/$profileId', {});
+      if (context != null) showRequestAlert(context, 'getprofile/$profileId', {});
 
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Flutter-NFC-App',
-          'Connection': 'keep-alive',
         },
-      );
+      ).timeout(const Duration(seconds: 30));
 
       // Show response alert
-      showResponseAlert(context, 'getprofile/$profileId', response.statusCode, response.body);
+      if (context != null && context.mounted) {
+        showResponseAlert(context, 'getprofile/$profileId', response.statusCode, response.body);
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
           final responseData = jsonDecode(response.body);
-          return responseData['data'];
+          return Map<String, dynamic>.from(
+            (responseData['data'] ?? responseData) as Map,
+          );
         } else {
           print('Error getting profile: ${response.statusCode} - ${response.body}');
           return null;
@@ -247,12 +271,10 @@ class NFCProfileService {
   }) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/update/$profileId'),
+        Uri.parse('$baseUrl/profiles/$profileId'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Flutter-NFC-App',
-          'Connection': 'keep-alive',
         },
         body: jsonEncode({
           'name': name,
@@ -266,11 +288,11 @@ class NFCProfileService {
           'facebook': facebook ?? '',
           'profileImageBase64': profileImageBase64,
         }),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        return responseData['data'];
+        return Map<String, dynamic>.from((responseData['data'] ?? responseData) as Map);
       } else {
         print('Error updating profile: ${response.statusCode} - ${response.body}');
         return null;
@@ -285,12 +307,10 @@ class NFCProfileService {
   static Future<bool> deleteProfile(String profileId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/delete/$profileId'),
+        Uri.parse('$baseUrl/deleteprofile/$profileId'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Flutter-NFC-App',
-          'Connection': 'keep-alive',
         },
       );
 
@@ -312,18 +332,32 @@ class NFCProfileService {
 
   // Generate QR code URL for profile
   static String generateProfileQRUrl(String profileId) {
-    return 'https://nfcprofilebackend.onrender.com/api/getprofile/$profileId';
+    return generateProfileHtmlUrl(profileId);
   }
 
   // Extract profile ID from QR URL
   static String? extractProfileIdFromUrl(String url) {
     try {
       final uri = Uri.parse(url);
-      if (uri.host.contains('nfcprofilebackend.onrender.com')) {
-        final segments = uri.pathSegments;
-        if (segments.length >= 3 && segments[0] == 'api' && segments[1] == 'getprofile') {
-          return segments[2];
-        }
+      final base = Uri.parse(baseUrl);
+      final segments = uri.pathSegments;
+      final isCurrentHost = uri.host == base.host &&
+          (uri.scheme == 'https' || uri.scheme == 'http');
+      final isLegacyHost = uri.host == 'nfcprofilebackend.onrender.com' &&
+          (uri.scheme == 'https' || uri.scheme == 'http');
+      final prefix = isCurrentHost
+          ? base.pathSegments
+          : isLegacyHost
+              ? ['api']
+              : <String>[];
+      if (prefix.isEmpty || segments.length != prefix.length + 2) return null;
+      for (var i = 0; i < prefix.length; i++) {
+        if (segments[i] != prefix[i]) return null;
+      }
+      if (['getprofile', 'profiles', 'profile', 'profile-page', 'p']
+          .contains(segments[prefix.length])) {
+        final id = segments.last;
+        return RegExp(r'^[a-fA-F0-9]{24}$').hasMatch(id) ? id : null;
       }
       return null;
     } catch (e) {

@@ -16,6 +16,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:mobile_scanner/mobile_scanner.dart' hide Email, Phone;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import '../services/nfc_profile_service.dart';
 
 class EnhancedNFCScanner extends StatefulWidget {
   final String? writeData;
@@ -1335,6 +1336,15 @@ class _EnhancedNFCScannerState extends State<EnhancedNFCScanner> {
         continue;
       }
       
+      if (type == 'U' && record.payload.isNotEmpty) {
+        final prefixIndex = record.payload.first;
+        if (prefixIndex < NdefRecord.URI_PREFIX_LIST.length) {
+          parts.add(NdefRecord.URI_PREFIX_LIST[prefixIndex] +
+              utf8.decode(record.payload.sublist(1), allowMalformed: true));
+        }
+        continue;
+      }
+
       // Handle other records
       if (record.payload != null && record.payload!.isNotEmpty) {
         try {
@@ -1415,14 +1425,39 @@ class _EnhancedNFCScannerState extends State<EnhancedNFCScanner> {
 
     try {
       final profileData = _createProfileData();
-      final nfcPayload = jsonEncode(profileData);
-      final deepLinkPayload = _buildProfileDeepLink(profileData);
+      final savedProfile = await NFCProfileService.createProfile(
+        name: profileData['name'],
+        phone: profileData['phone'],
+        email: profileData['email'],
+        address: profileData['address'],
+        bio: profileData['bio'],
+        googleBusiness: profileData['googleBusiness'],
+        instagram: profileData['instagram'],
+        linkedin: profileData['linkedin'],
+        facebook: profileData['facebook'],
+      );
+      if (!mounted) return;
+      if (savedProfile == null) {
+        throw Exception('Backend save could not be confirmed. NFC card was not written.');
+      }
+      final id = (savedProfile['_id'] ?? savedProfile['id'])?.toString();
+      if (id == null) {
+        throw Exception('Profile saved, but the backend did not return a profile ID.');
+      }
+      final html = await NFCProfileService.getProfileHtml(id);
+      if (!mounted) return;
+      if (html == null) {
+        throw Exception('Profile saved, but the HTML profile page could not be loaded. NFC card was not written.');
+      }
+      final nfcPayload = NFCProfileService.generateProfileHtmlUrl(id);
       setState(() {
-        _qrData = deepLinkPayload;
+        _qrData = nfcPayload;
       });
-      await _saveProfile(profileData);
-      _startNFCWriteSession(nfcPayload);
+      await _saveProfile(savedProfile);
+      if (!mounted) return;
+      await _startNFCWriteSession(nfcPayload);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isProcessing = false;
         errorMessage = 'Failed to save profile: $e';
@@ -1685,10 +1720,15 @@ class _EnhancedNFCScannerState extends State<EnhancedNFCScanner> {
         await NfcManager.instance.stopSession();
       } catch (_) {}
 
-      final payloadBytes = Uint8List.fromList(utf8.encode(payload));
       final message = NdefMessage([
-        NdefRecord.createText(payload),
+        NdefRecord.createUri(Uri.parse(payload)),
       ]);
+      final messageSize = message.records.fold<int>(
+        0, (total, record) => total + 2 +
+            (record.payload.length < 256 ? 1 : 4) +
+            (record.identifier.isEmpty ? 0 : 1) +
+            record.type.length + record.identifier.length + record.payload.length,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1744,14 +1784,14 @@ class _EnhancedNFCScannerState extends State<EnhancedNFCScanner> {
               return;
             }
 
-            if (payloadBytes.length > ndef.maxSize) {
+            if (messageSize > ndef.maxSize) {
               await NfcManager.instance.stopSession(errorMessage: 'Data too large for this tag.');
               if (!mounted) return;
               setState(() {
                 isScanning = false;
                 isProcessing = false;
                 errorMessage =
-                    'Data too large for this tag. Max: ${ndef.maxSize} bytes, got: ${payloadBytes.length} bytes.';
+                    'Data too large for this tag. Max: ${ndef.maxSize} bytes, got: $messageSize bytes.';
               });
               _showWriteError('Data too large for this tag.');
               return;
@@ -1884,7 +1924,20 @@ class _EnhancedNFCScannerState extends State<EnhancedNFCScanner> {
     );
   }
 
-  void _showReadResult() {
+  void _showReadResult() async {
+    final profileId = NFCProfileService.extractProfileIdFromUrl(readData ?? '');
+    if (profileId != null) {
+      final profile = await NFCProfileService.getProfile(profileId);
+      if (!mounted) return;
+      if (profile == null) {
+        setState(() => errorMessage = 'Unable to load the profile from the backend.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to load the profile from the backend.')),
+        );
+        return;
+      }
+      setState(() => readData = jsonEncode(profile));
+    }
     final userData = _parseScannedUserData(readData ?? '');
 
     try {
