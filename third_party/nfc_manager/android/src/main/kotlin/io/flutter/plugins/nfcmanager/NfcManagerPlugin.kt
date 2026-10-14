@@ -326,23 +326,27 @@ class NfcManagerPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     try {
-      forceConnect(tech)
-      callback(tech)
+      callback(forceConnect(tech))
     } catch (e: Exception) {
-      result.error("io_exception", e.localizedMessage, null)
+      result.error("io_exception", e.localizedMessage ?: "NFC communication failed. Keep the card against the phone and try again.", null)
     }
   }
 
   @Throws(IOException::class)
-  private fun forceConnect(tech: TagTechnology) {
-    connectedTech?.let {
-      if (it.tag == tech.tag && it::class.java.name == tech::class.java.name) return
-      try { tech.close() } catch (e: IOException) { /* no op */ }
-      tech.connect()
-      connectedTech = tech
-    } ?: run {
-      tech.connect()
-      connectedTech = tech
+  @Suppress("UNCHECKED_CAST")
+  private fun <T: TagTechnology> forceConnect(tech: T): T {
+    val previous = connectedTech
+    if (previous != null) {
+      // get(tag) creates a new object. Reads after writes must use the
+      // object that was actually connected, not the fresh unconnected one.
+      if (previous.tag == tech.tag && previous.javaClass == tech.javaClass && previous.isConnected) {
+        return previous as T
+      }
+      connectedTech = null
+      try { previous.close() } catch (e: IOException) { /* no op */ }
     }
+    tech.connect()
+    connectedTech = tech
+    return tech
   }
 }
