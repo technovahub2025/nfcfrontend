@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:nfc_manager/platform_tags.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,6 +146,18 @@ class _ProfileEntryScreenState extends State<ProfileEntryScreen> {
     }
   }
 
+  String _cardWriteError(Object error) {
+    if (error is PlatformException &&
+        (error.code == 'io_exception' || error.code == 'tag_lost')) {
+      return 'Card write could not be confirmed. Keep the card firmly against '
+          'the phone\'s NFC area until verification finishes. Tap Save to retry.';
+    }
+    final detail = error is PlatformException
+        ? (error.message ?? 'NFC error (${error.code}).')
+        : error.toString();
+    return 'Card write could not be confirmed: $detail';
+  }
+
   Future<String?> _writeCard(String url) async {
     if (kIsWeb ||
         (defaultTargetPlatform != TargetPlatform.android &&
@@ -219,7 +232,7 @@ class _ProfileEntryScreenState extends State<ProfileEntryScreen> {
             if (!completion.isCompleted) completion.complete(null);
           } catch (error) {
             if (!completion.isCompleted) {
-              completion.complete('Card write could not be confirmed: $error');
+              completion.complete(_cardWriteError(error));
             }
           } finally {
             handlingTag = false;
@@ -243,7 +256,7 @@ class _ProfileEntryScreenState extends State<ProfileEntryScreen> {
         },
       );
     } catch (error) {
-      return 'Card write could not be confirmed: $error';
+      return _cardWriteError(error);
     } finally {
       if (!completion.isCompleted) completion.complete('Card write stopped.');
       if (sessionStarted) {

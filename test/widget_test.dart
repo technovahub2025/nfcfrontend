@@ -310,6 +310,8 @@ void main() {
     'read-only',
     'too small',
     'mismatch',
+    'write io error',
+    'verify io error',
     'cancel',
   ]) {
     testWidgets('NFC Save handles $scenario without opening the browser', (
@@ -331,10 +333,16 @@ void main() {
             expect((call.arguments as Map)['invalidateAfterFirstRead'], false);
             return null;
           case 'Ndef#write':
+            if (scenario == 'write io error') {
+              throw PlatformException(code: 'io_exception');
+            }
             written = (call.arguments as Map)['message'] as Map;
             return null;
           case 'Ndef#read':
             read = true;
+            if (scenario == 'verify io error') {
+              throw PlatformException(code: 'io_exception');
+            }
             return scenario == 'mismatch' ? {'records': []} : written;
           case 'Nfc#stopSession':
             stopped = true;
@@ -413,11 +421,23 @@ void main() {
                     ? 'verification failed'
                     : scenario == 'too small'
                     ? 'too large'
+                    : scenario.endsWith('io error')
+                    ? 'Keep the card firmly against'
                     : 'read-only',
               ),
               findsOneWidget,
             );
-            if (scenario != 'mismatch') expect(written, isNull);
+            if (scenario.endsWith('io error')) {
+              expect(find.textContaining('PlatformException'), findsNothing);
+              expect(
+                find.textContaining('Profile saved on the server'),
+                findsOneWidget,
+              );
+              expect(read, scenario == 'verify io error');
+            }
+            if (scenario != 'mismatch' && scenario != 'verify io error') {
+              expect(written, isNull);
+            }
           }
         },
         () => MockClient((request) async {
